@@ -1,0 +1,9 @@
+*~
+.pio
+.clang_complete
+.ccls
+/proto-build/
+uti/venv
+/include/og3/satellite.pb.h
+/src/satellite.pb.c
+/util/venv/

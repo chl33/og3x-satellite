@@ -1,0 +1,30 @@
+{
+    "name": "og3x-satellite",
+    "version": "0.1.0",
+    "description": "A satellite comms architecture for chl33/og3",
+    "keywords": "esp32, esp8266",
+    "authors": [
+	{
+	    "name": "Chris Lee",
+	    "email": "lee.chris.h@gmail.com",
+	    "url": "https://selectiveappeal.org/",
+	    "maintainer": true
+	}
+    ],
+    "dependencies": {
+	"chl33/og3": "~0.3.16",
+	"nanopb/Nanopb": "~0.4.91"
+
+    },
+    "export": {
+	"exclude": [".*", "*~", "util/"]
+    },
+    "license": "MIT",
+    "frameworks": "*",
+    "platforms": "espressif8266, espressif32, native",
+    "repository":
+    {
+	"type": "git",
+	"url": "https://github.com/chl33/og3x-satellite"
+    }
+}
