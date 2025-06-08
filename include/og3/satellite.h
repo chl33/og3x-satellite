@@ -76,9 +76,10 @@ class PacketSender {
     unsigned sensor_descriptions_sent;
   };
 
-  void send_desc();
+  void send_desc(size_t max_size);
   void send_all_readings();
   bool is_sending() const { return m_is_sending; }
+  void set_is_sending(bool is_sending) { m_is_sending = is_sending; }
   void set_board_id(uint32_t board_id) { m_board_id = board_id; }
 
  protected:

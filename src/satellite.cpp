@@ -3,6 +3,8 @@
 
 #include "og3/satellite.h"
 
+#include <pb_encode.h>
+
 #define SETSTR(X, VAL) strncpy(X, (VAL), sizeof(X) - 1)
 
 namespace og3::satellite {
@@ -42,26 +44,44 @@ bool PacketIntReading::write_desc(og3_Packet& packet) {
   return true;
 }
 
-void PacketSender::send_desc() {
+void PacketSender::send_desc(size_t max_size) {
   m_app->log().debugf("send_reading_i_with_desc(%u)", m_rtc->sensor_descriptions_sent);
   if (m_rtc->sensor_descriptions_sent >= m_readings.size()) {
     return;
   }
+
   m_is_sending = true;
-  auto reading = m_readings[m_rtc->sensor_descriptions_sent].get();
-  if (!reading->read()) {
+  og3_Packet packet og3_Packet_init_zero;
+  const bool send_device_info = (m_rtc->sensor_descriptions_sent == 0);
+  start_packet(packet, send_device_info);
+  unsigned num_sensors = 0;
+  size_t packet_size = 0;
+  while (m_rtc->sensor_descriptions_sent + num_sensors < m_readings.size()) {
+    auto reading = m_readings[m_rtc->sensor_descriptions_sent + num_sensors].get();
+    reading->write_desc(packet);
+    if (!pb_get_encoded_size(&packet_size, &og3_Packet_msg, &packet)) {
+      return;
+    }
+    if (packet_size > max_size) {
+      break;
+    }
+    num_sensors += 1;
+    if (packet_size > max_size - 8) {
+      break;
+    }
+  }
+  if (num_sensors == 0) {
     return;
   }
-  og3_Packet packet og3_Packet_init_zero;
-  start_packet(packet, true);
-  reading->write_desc(packet);
-  m_rtc->sensor_descriptions_sent += 1;
+
+  packet.sensor_count = num_sensors;
+  m_rtc->sensor_descriptions_sent += num_sensors;
   const bool more_to_send = (m_rtc->sensor_descriptions_sent < m_readings.size());
   // Don't blink if board will go to sleep immediately after sending the packet.
   send_packet(packet);
   m_is_sending = more_to_send;
   if (more_to_send) {
-    m_app->tasks().runIn(15 * kMsecInSec, [this]() { send_desc(); });
+    m_app->tasks().runIn(15 * kMsecInSec, [this, max_size]() { send_desc(max_size); });
   }
 }
 
