@@ -17,5 +17,8 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
+      - name: Do basic build
+        run: ./util/build.sh
+
       - name: Run PlatformIO tests
         run: pio test -e native
