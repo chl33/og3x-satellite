@@ -9,8 +9,8 @@ package og3;
 
 message Sensor {
   uint32 id = 1;
-  string name = 2 [(nanopb).max_length = 15];
-  string units = 3 [(nanopb).max_length = 7];
+  string name = 2 [ (nanopb).max_length = 15 ];
+  string units = 3 [ (nanopb).max_length = 7 ];
 
   enum Type {
     TYPE_UNSPECIFIED = 0;
@@ -25,9 +25,9 @@ message Sensor {
   // State classes
   // https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
   enum StateClass {
-       STATE_CLASS_UNSPECIFIED = 0;
-       STATE_CLASS_MEASUREMENT = 1;
-       // Not yet supported: MEASUREMENT_ANGLE, TOTAL, TOTAL_INCREASING
+    STATE_CLASS_UNSPECIFIED = 0;
+    STATE_CLASS_MEASUREMENT = 1;
+    // Not yet supported: MEASUREMENT_ANGLE, TOTAL, TOTAL_INCREASING
   }
   StateClass state_class = 5;
 }
@@ -44,14 +44,14 @@ message IntSensorReading {
 
 message Version {
   uint32 major = 1;
-  uint32 minor = 2;  
-  uint32 patch = 3;  
+  uint32 minor = 2;
+  uint32 patch = 3;
 }
 
 message Device {
   uint32 id = 1;
   uint32 manufacturer = 2;
-  string name = 3 [(nanopb).max_length = 15];
+  string name = 3 [ (nanopb).max_length = 15 ];
   Version hardware_version = 4;
   Version software_version = 5;
 }
@@ -59,7 +59,7 @@ message Device {
 message Packet {
   uint32 device_id = 1;
   Device device = 2;
-  repeated FloatSensorReading reading = 3 [(nanopb).max_length = 80, (nanopb).max_count = 8];
-  repeated IntSensorReading i_reading = 4 [(nanopb).max_length = 80, (nanopb).max_count = 8];
-  repeated Sensor sensor = 5 [(nanopb).max_length = 120, (nanopb).max_count = 8];
+  repeated FloatSensorReading reading = 3 [ (nanopb).max_length = 80, (nanopb).max_count = 8 ];
+  repeated IntSensorReading i_reading = 4 [ (nanopb).max_length = 80, (nanopb).max_count = 8 ];
+  repeated Sensor sensor = 5 [ (nanopb).max_length = 120, (nanopb).max_count = 8 ];
 }
