@@ -23,6 +23,7 @@ bool PacketFloatReading::write_desc(og3_Packet& packet) {
   SETSTR(sensor.name, m_var.name());
   SETSTR(sensor.units, m_var.units());
   sensor.type = m_sensor_type;
+  sensor.state_class = m_state_class;
   packet.sensor_count += 1;
   return true;
 }

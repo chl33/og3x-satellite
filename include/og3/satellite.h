@@ -14,8 +14,8 @@ namespace og3::satellite {
 
 class PacketReading {
  public:
-  PacketReading(unsigned sensor_id, og3_Sensor_Type sensor_type)
-      : m_sensor_id(sensor_id), m_sensor_type(sensor_type) {}
+  PacketReading(unsigned sensor_id, og3_Sensor_Type sensor_type, og3_Sensor_StateClass state_class)
+      : m_sensor_id(sensor_id), m_sensor_type(sensor_type), m_state_class(state_class) {}
 
   virtual bool read() = 0;
   virtual bool write(og3_Packet& packet) = 0;
@@ -24,12 +24,15 @@ class PacketReading {
  protected:
   const unsigned m_sensor_id;
   const og3_Sensor_Type m_sensor_type;
+  const og3_Sensor_StateClass m_state_class;
 };
 
 class PacketFloatReading : public PacketReading {
  public:
-  PacketFloatReading(unsigned sensor_id, og3_Sensor_Type sensor_type, const FloatVariable& var)
-      : PacketReading(sensor_id, sensor_type), m_var(var) {}
+  PacketFloatReading(
+      unsigned sensor_id, og3_Sensor_Type sensor_type, const FloatVariable& var,
+      og3_Sensor_StateClass state_class = og3_Sensor_StateClass_STATE_CLASS_UNSPECIFIED)
+      : PacketReading(sensor_id, sensor_type, state_class), m_var(var) {}
 
   bool write(og3_Packet& packet) override;
   bool write_desc(og3_Packet& packet) override;
@@ -40,8 +43,11 @@ class PacketFloatReading : public PacketReading {
 
 class PacketVoltageReading : public PacketFloatReading {
  public:
-  PacketVoltageReading(unsigned sensor_id, AdcVoltage& adc)
-      : PacketFloatReading(sensor_id, og3_Sensor_Type_TYPE_VOLTAGE, adc.valueVariable()),
+  PacketVoltageReading(
+      unsigned sensor_id, AdcVoltage& adc,
+      og3_Sensor_StateClass state_class = og3_Sensor_StateClass_STATE_CLASS_UNSPECIFIED)
+      : PacketFloatReading(sensor_id, og3_Sensor_Type_TYPE_VOLTAGE, adc.valueVariable(),
+                           state_class),
         m_adc(adc) {}
 
   bool read() final {
@@ -55,8 +61,12 @@ class PacketVoltageReading : public PacketFloatReading {
 
 class PacketIntReading : public PacketReading {
  public:
-  PacketIntReading(unsigned sensor_id, const char* desc, Variable<unsigned>& ivar)
-      : PacketReading(sensor_id, og3_Sensor_Type_TYPE_UNSPECIFIED), m_desc(desc), m_ivar(ivar) {}
+  PacketIntReading(
+      unsigned sensor_id, const char* desc, Variable<unsigned>& ivar,
+      og3_Sensor_StateClass state_class = og3_Sensor_StateClass_STATE_CLASS_UNSPECIFIED)
+      : PacketReading(sensor_id, og3_Sensor_Type_TYPE_UNSPECIFIED, state_class),
+        m_desc(desc),
+        m_ivar(ivar) {}
 
   bool read() override { return true; }
   bool write(og3_Packet& packet) override;
