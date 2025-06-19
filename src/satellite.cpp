@@ -122,6 +122,8 @@ void PacketSender::start_packet(og3_Packet& packet, bool update_device) {
   packet.device.software_version.major = m_device->software_version.major;
   packet.device.software_version.minor = m_device->software_version.minor;
   packet.device.software_version.patch = m_device->software_version.patch;
+  packet.device.has_hardware_version = true;
+  packet.device.has_software_version = true;
 }
 
 }  // namespace og3::satellite
