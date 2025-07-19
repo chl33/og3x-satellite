@@ -54,6 +54,7 @@ message Device {
   string name = 3 [ (nanopb).max_length = 15 ];
   Version hardware_version = 4;
   Version software_version = 5;
+  string device_type = 6 [ (nanopb).max_length = 15 ];
 }
 
 message Packet {

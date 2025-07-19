@@ -66,14 +66,17 @@ class IntSensor : public Sensor {
 
 class Device {
  public:
-  Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, ModuleSystem* module_system,
-         HADiscovery* ha_discovery, uint16_t seq_id, VariableGroup& cvg);
+  Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const char* device_type,
+         ModuleSystem* module_system, HADiscovery* ha_discovery, uint16_t seq_id,
+         VariableGroup& cvg);
 
   const std::string& name() const { return m_name; }
   const char* cname() const { return name().c_str(); }
   const std::string& device_id() const { return m_device_id; }
   const char* cdevice_id() const { return device_id().c_str(); }
   const std::string& manufacturer() const { return m_manufacturer; }
+  const std::string& device_type() const { return m_device_type; }
+  const char* cdevice_type() const { return device_type().c_str(); }
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
@@ -112,6 +115,7 @@ class Device {
   const std::string m_name;
   const std::string m_device_id;
   const std::string m_manufacturer;
+  const std::string m_device_type;
   uint16_t m_seq_id;
   HADiscovery* m_discovery;
   VariableGroup m_vg;
