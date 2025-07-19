@@ -47,12 +47,6 @@ std::string _manufacturer(uint32_t id) {
   return buffer;
 }
 
-std::string _device_name(const char* name, uint32_t device_id) {
-  char buffer[80];
-  const auto len = snprintf(buffer, sizeof(buffer), "%s %x", name, device_id);
-  return std::string(buffer, len);
-}
-
 std::string _device_id(const char* name, uint32_t device_id) {
   char buffer[80];
   const auto len = snprintf(buffer, sizeof(buffer), "%s_%x", name, device_id);
@@ -108,13 +102,14 @@ IntSensor::IntSensor(const char* name, const char* device_class, const char* uni
   addHAEntry(entry);
 }
 
-Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id,
+Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const char* device_type,
                ModuleSystem* module_system, HADiscovery* ha_discovery, uint16_t seq_id,
                VariableGroup& cvg)
     : m_device_id_num(device_id_num),
-      m_name(_device_name(name, device_id_num)),
+      m_name(name),
       m_device_id(_device_id(name, device_id_num)),
       m_manufacturer(_manufacturer(mfg_id)),
+      m_device_type(device_type),
       m_seq_id(seq_id),
       m_discovery(ha_discovery),
       m_vg(m_name.c_str(), m_device_id.c_str()),
@@ -130,6 +125,9 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id,
     entry.device_name = cname();
     entry.device_id = cdevice_id();
     entry.manufacturer = manufacturer().c_str();
+    if (!m_device_type.empty()) {
+      entry.model = cdevice_type();
+    }
     char entry_name[80];
     make_entry_name(entry_name, sizeof(entry_name), cname(), var.name());
     entry.entry_name = entry_name;
