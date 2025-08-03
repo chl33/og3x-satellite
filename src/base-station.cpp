@@ -79,7 +79,7 @@ void Sensor::addHAEntry(HADiscovery::Entry& entry) {
       break;
   }
   // entry.software
-  // entry.model
+  entry.via_device = m_device->ha_discovery().deviceId();
   // entry.icon
   JsonDocument json;
   // TODO(chrishl): should bookkeep and send again if this fails.
