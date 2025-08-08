@@ -47,6 +47,7 @@ class FloatSensor : public Sensor {
 
   FloatVariable& value() { return m_value; }
   const FloatVariable& value() const { return m_value; }
+  void set_failed() { m_value.setFailed(); }
 
  private:
   FloatVariable m_value;
@@ -59,6 +60,7 @@ class IntSensor : public Sensor {
 
   Variable<int>& value() { return m_value; }
   const Variable<int>& value() const { return m_value; }
+  void set_failed() { m_value.setFailed(); }
 
  private:
   Variable<int> m_value;
@@ -80,6 +82,8 @@ class Device {
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
+
+  void setAllSensorReadingsFailed();
 
   FloatSensor* float_sensor(unsigned id) {
     auto iter = m_id_to_float_sensor.find(id);

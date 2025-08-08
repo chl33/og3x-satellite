@@ -155,4 +155,13 @@ void Device::got_packet(uint16_t seq_id, int rssi) {
   m_rssi = rssi;
 }
 
+void Device::setAllSensorReadingsFailed() {
+  for (auto& iter : m_id_to_float_sensor) {
+    iter.second->set_failed();
+  }
+  for (auto& iter : m_id_to_int_sensor) {
+    iter.second->set_failed();
+  }
+}
+
 }  // namespace og3::base_station
