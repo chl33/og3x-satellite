@@ -12,7 +12,7 @@
 	}
     ],
     "dependencies": {
-	"og3": "~0.5.0",
+	"og3": "~0.6.0",
 	"nanopb/Nanopb": "~0.4.91"
 
     },
