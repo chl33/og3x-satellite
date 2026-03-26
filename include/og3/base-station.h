@@ -114,6 +114,13 @@ class Device {
   VariableGroup& vg() { return m_vg; }
   HADiscovery& ha_discovery() { return *m_discovery; }
 
+  const std::map<unsigned, std::unique_ptr<FloatSensor>>& id_to_float_sensor() const {
+    return m_id_to_float_sensor;
+  }
+  const std::map<unsigned, std::unique_ptr<IntSensor>>& id_to_int_sensor() const {
+    return m_id_to_int_sensor;
+  }
+
  private:
   const uint32_t m_device_id_num;
   const std::string m_name;
