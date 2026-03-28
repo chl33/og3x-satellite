@@ -149,7 +149,7 @@ bool Device::saveAll(const char* filename, ConfigInterface* config,
     obj["swMin"] = device->software_version().minor;
     obj["swPat"] = device->software_version().patch;
   }
-  String content;
+  std::string content;
   serializeJson(doc, content);
   return config->write_file(filename, content.c_str());
 }
@@ -163,7 +163,7 @@ bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDevice
     return false;
   }
   JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, content);
+  DeserializationError error = deserializeJson(doc, content.c_str());
   if (error) {
     return false;
   }
