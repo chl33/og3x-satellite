@@ -5,12 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout og3x-satellite
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: og3x-satellite
 
       - name: Checkout og3
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: chl33/og3
           path: og3
