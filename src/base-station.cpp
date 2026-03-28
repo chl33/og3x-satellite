@@ -101,6 +101,8 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
       m_mfg_id(mfg_id),
       m_manufacturer(_manufacturer(mfg_id)),
       m_device_type(device_type),
+      m_hw_version(og3_Version_init_zero),
+      m_sw_version(og3_Version_init_zero),
       m_seq_id(seq_id),
       m_discovery(ha_discovery),
       m_vg(m_name.c_str(), m_device_id.c_str()),
@@ -140,6 +142,12 @@ bool Device::saveAll(const char* filename, ConfigInterface* config,
     obj["mfg"] = device->mfg_id();
     obj["type"] = device->device_type();
     obj["timeout"] = device->comms_timeout_millis();
+    obj["hwMaj"] = device->hardware_version().major;
+    obj["hwMin"] = device->hardware_version().minor;
+    obj["hwPat"] = device->hardware_version().patch;
+    obj["swMaj"] = device->software_version().major;
+    obj["swMin"] = device->software_version().minor;
+    obj["swPat"] = device->software_version().patch;
   }
   String content;
   serializeJson(doc, content);
@@ -161,7 +169,9 @@ bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDevice
   }
   JsonArray arr = doc.as<JsonArray>();
   for (JsonObject obj : arr) {
-    create_fn(obj["id"], obj["name"], obj["mfg"], obj["type"], obj["timeout"]);
+    og3_Version hw = {obj["hwMaj"], obj["hwMin"], obj["hwPat"]};
+    og3_Version sw = {obj["swMaj"], obj["swMin"], obj["swPat"]};
+    create_fn(obj["id"], obj["name"], obj["mfg"], obj["type"], obj["timeout"], hw, sw);
   }
   return true;
 }

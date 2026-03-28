@@ -83,6 +83,12 @@ class Device {
   const std::string& device_type() const { return m_device_type; }
   const char* cdevice_type() const { return device_type().c_str(); }
   void set_device_type(const char* device_type) { m_device_type = device_type; }
+
+  const og3_Version& hardware_version() const { return m_hw_version; }
+  void set_hardware_version(const og3_Version& v) { m_hw_version = v; }
+  const og3_Version& software_version() const { return m_sw_version; }
+  void set_software_version(const og3_Version& v) { m_sw_version = v; }
+
   unsigned packet_count() const { return m_packet_count; }
   uint32_t last_packet_millis() const { return m_last_packet_millis; }
   uint32_t comms_timeout_millis() const { return m_comms_timeout_millis; }
@@ -107,8 +113,9 @@ class Device {
                       const std::map<uint32_t, std::unique_ptr<Device>>& devices);
 
   /** @brief Persistence: Load devices from a JSON file. */
-  using CreateDeviceFn = std::function<Device*(uint32_t id, const char* name, uint32_t mfg_id,
-                                               const char* type, uint32_t timeout_ms)>;
+  using CreateDeviceFn = std::function<Device*(
+      uint32_t id, const char* name, uint32_t mfg_id, const char* type, uint32_t timeout_ms,
+      const og3_Version& hw_version, const og3_Version& sw_version)>;
   static bool loadAll(const char* filename, ConfigInterface* config, CreateDeviceFn create_fn);
 
   FloatSensor* float_sensor(unsigned id) {
@@ -154,6 +161,8 @@ class Device {
   uint32_t m_mfg_id;
   std::string m_manufacturer;
   std::string m_device_type;
+  og3_Version m_hw_version;
+  og3_Version m_sw_version;
   uint16_t m_seq_id;
   HADiscovery* m_discovery;
   VariableGroup m_vg;
