@@ -82,6 +82,7 @@ class Device {
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
+  bool is_online() const { return m_is_online; }
 
   void addHAEntry(HADiscovery::Entry& entry, const char* sensor_name);
   void setAllSensorReadingsFailed();
