@@ -79,6 +79,7 @@ class Device {
   const std::string& manufacturer() const { return m_manufacturer; }
   const std::string& device_type() const { return m_device_type; }
   const char* cdevice_type() const { return device_type().c_str(); }
+  void set_device_type(const char* device_type) { m_device_type = device_type; }
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
@@ -133,7 +134,7 @@ class Device {
   const std::string m_name;
   const std::string m_device_id;
   const std::string m_manufacturer;
-  const std::string m_device_type;
+  std::string m_device_type;
   uint16_t m_seq_id;
   HADiscovery* m_discovery;
   VariableGroup m_vg;
