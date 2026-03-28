@@ -83,7 +83,13 @@ class Device {
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
 
+  void addHAEntry(HADiscovery::Entry& entry, const char* sensor_name);
   void setAllSensorReadingsFailed();
+
+  void setIsOnline(bool is_online);
+
+  bool isTimedOut() const;
+  void set_comms_timeout_millis(uint32_t ms) { m_comms_timeout_millis = ms; }
 
   FloatSensor* float_sensor(unsigned id) {
     auto iter = m_id_to_float_sensor.find(id);
@@ -136,6 +142,10 @@ class Device {
   std::map<unsigned, std::unique_ptr<IntSensor>> m_id_to_int_sensor;
   std::string m_str_disabled;
   BoolVariable m_disabled;
+  uint32_t m_last_packet_millis = 0;
+  bool m_is_online = false;
+  // TODO(chl33): How can this be configured??
+  uint32_t m_comms_timeout_millis = 15 * 60 * 1000;  // 15 minutes.
 };
 
 }  // namespace og3::base_station
