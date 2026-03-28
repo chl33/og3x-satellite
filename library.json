@@ -1,6 +1,6 @@
 {
     "name": "og3x-satellite",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "A satellite comms architecture for chl33/og3",
     "keywords": "esp32, esp8266",
     "authors": [
@@ -12,7 +12,7 @@
 	}
     ],
     "dependencies": {
-	"og3": "~0.6.0",
+	"og3": "~0.6.1",
 	"nanopb/Nanopb": "~0.4.91"
 
     },

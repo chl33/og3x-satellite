@@ -124,6 +124,8 @@ void PacketSender::start_packet(og3_Packet& packet, bool update_device) {
   packet.device.software_version.patch = m_device->software_version.patch;
   packet.device.has_hardware_version = true;
   packet.device.has_software_version = true;
+  SETSTR(packet.device.device_type, m_device->device_type);
+  packet.device.timeout_secs = m_device->timeout_secs;
 }
 
 }  // namespace og3::satellite

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for details.
 
 #include <og3/base-station.h>
+#include <og3/config_interface.h>
 
 namespace og3::base_station {
 namespace {
@@ -65,12 +66,6 @@ Sensor::Sensor(const char* name, const char* device_class, const char* units, De
       m_device(device) {}
 
 void Sensor::addHAEntry(HADiscovery::Entry& entry) {
-  entry.device_name = m_device->cname();
-  entry.device_id = m_device->cdevice_id();
-  entry.manufacturer = m_device->manufacturer().c_str();
-  char entry_name[80];
-  make_entry_name(entry_name, sizeof(entry_name), m_device->cname(), name().c_str());
-  entry.entry_name = entry_name;
   switch (m_state_class) {
     case og3_Sensor_StateClass_STATE_CLASS_UNSPECIFIED:
       break;
@@ -78,12 +73,7 @@ void Sensor::addHAEntry(HADiscovery::Entry& entry) {
       entry.state_class = "measurement";
       break;
   }
-  // entry.software
-  entry.via_device = m_device->ha_discovery().deviceId();
-  // entry.icon
-  JsonDocument json;
-  // TODO(chrishl): should bookkeep and send again if this fails.
-  m_device->ha_discovery().addEntry(&json, entry);
+  m_device->addHAEntry(entry, name().c_str());
 }
 
 FloatSensor::FloatSensor(const char* name, const char* device_class, const char* units,
@@ -108,8 +98,11 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
     : m_device_id_num(device_id_num),
       m_name(name),
       m_device_id(_device_id(name, device_id_num)),
+      m_mfg_id(mfg_id),
       m_manufacturer(_manufacturer(mfg_id)),
       m_device_type(device_type),
+      m_hw_version(og3_Version_init_zero),
+      m_sw_version(og3_Version_init_zero),
       m_seq_id(seq_id),
       m_discovery(ha_discovery),
       m_vg(m_name.c_str(), m_device_id.c_str()),
@@ -120,21 +113,67 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
   JsonDocument json;
   auto make_ha_entry = [&json, this](const VariableBase& var, const char* device_type,
                                      const char* device_class) {
-    json.clear();
     HADiscovery::Entry entry(var, device_type, device_class);
-    entry.device_name = cname();
-    entry.device_id = cdevice_id();
-    entry.manufacturer = manufacturer().c_str();
-    if (!m_device_type.empty()) {
-      entry.model = cdevice_type();
-    }
-    char entry_name[80];
-    make_entry_name(entry_name, sizeof(entry_name), cname(), var.name());
-    entry.entry_name = entry_name;
-    m_discovery->addEntry(&json, entry);
+    entry.state_class = "measurement";
+    addHAEntry(entry, var.name());
   };
   make_ha_entry(m_dropped_packets, ha::device_type::kSensor, nullptr);
   make_ha_entry(m_rssi, ha::device_type::kSensor, ha::device_class::sensor::kSignalStrength);
+  setIsOnline(true);
+}
+
+void Device::set_mfg_id(uint32_t mfg_id) {
+  m_mfg_id = mfg_id;
+  m_manufacturer = _manufacturer(mfg_id);
+}
+
+bool Device::saveAll(const char* filename, ConfigInterface* config,
+                     const std::map<uint32_t, std::unique_ptr<Device>>& devices) {
+  if (!config) {
+    return false;
+  }
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for (auto& iter : devices) {
+    const auto& device = iter.second;
+    JsonObject obj = arr.add<JsonObject>();
+    obj["id"] = device->id_num();
+    obj["name"] = device->name();
+    obj["mfg"] = device->mfg_id();
+    obj["type"] = device->device_type();
+    obj["timeout"] = device->comms_timeout_millis();
+    obj["hwMaj"] = device->hardware_version().major;
+    obj["hwMin"] = device->hardware_version().minor;
+    obj["hwPat"] = device->hardware_version().patch;
+    obj["swMaj"] = device->software_version().major;
+    obj["swMin"] = device->software_version().minor;
+    obj["swPat"] = device->software_version().patch;
+  }
+  std::string content;
+  serializeJson(doc, content);
+  return config->write_file(filename, content.c_str());
+}
+
+bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDeviceFn create_fn) {
+  if (!config) {
+    return false;
+  }
+  String content;
+  if (!config->read_file(filename, &content)) {
+    return false;
+  }
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, content.c_str());
+  if (error) {
+    return false;
+  }
+  JsonArray arr = doc.as<JsonArray>();
+  for (JsonObject obj : arr) {
+    og3_Version hw = {obj["hwMaj"], obj["hwMin"], obj["hwPat"]};
+    og3_Version sw = {obj["swMaj"], obj["swMin"], obj["swPat"]};
+    create_fn(obj["id"], obj["name"], obj["mfg"], obj["type"], obj["timeout"], hw, sw);
+  }
+  return true;
 }
 
 void Device::got_packet(uint16_t seq_id, int rssi) {
@@ -153,8 +192,30 @@ void Device::got_packet(uint16_t seq_id, int rssi) {
   }
   m_seq_id = seq_id;
   m_rssi = rssi;
+  m_last_packet_millis = millis();
+  m_packet_count += 1;
 }
 
+void Device::addHAEntry(HADiscovery::Entry& entry, const char* sensor_name) {
+  entry.device_name = cname();
+  entry.device_id = cdevice_id();
+  entry.manufacturer = manufacturer().c_str();
+  if (!m_device_type.empty()) {
+    entry.model = cdevice_type();
+  }
+  char entry_name[80];
+  make_entry_name(entry_name, sizeof(entry_name), cname(), sensor_name);
+  entry.entry_name = entry_name;
+  entry.software = cname();
+  entry.via_device = ha_discovery().deviceId();
+  char availability[80];
+  snprintf(availability, sizeof(availability), "~/%s_connection", cname());
+  entry.availability = availability;
+  // entry.icon
+  JsonDocument json;
+  // TODO(chrishl): should bookkeep and send again if this fails.
+  ha_discovery().addEntry(&json, entry);
+}
 void Device::setAllSensorReadingsFailed() {
   for (auto& iter : m_id_to_float_sensor) {
     iter.second->set_failed();
@@ -162,6 +223,31 @@ void Device::setAllSensorReadingsFailed() {
   for (auto& iter : m_id_to_int_sensor) {
     iter.second->set_failed();
   }
+}
+
+void Device::setIsOnline(bool is_online) {
+  if (is_online == m_is_online) {
+    return;
+  }
+  m_is_online = is_online;
+  if (!is_online) {
+    setAllSensorReadingsFailed();
+  }
+  auto mqtt = m_discovery->mqttManager();
+  if (!mqtt) {
+    return;
+  }
+  char availability[80];
+  snprintf(availability, sizeof(availability), "%s_connection", cname());
+  mqtt->mqttSend(mqtt->topic(availability).c_str(), is_online ? "online" : "offline");
+}
+
+bool Device::isTimedOut() const {
+  if (!m_is_online) {
+    return true;
+  }
+  const uint32_t elapsed = millis() - m_last_packet_millis;
+  return elapsed > m_comms_timeout_millis;
 }
 
 }  // namespace og3::base_station

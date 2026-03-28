@@ -3,7 +3,7 @@
 set -e
 here="$(readlink -f "$(dirname "$0")")"
 cd "${here}"/..
-pio pkg install
+pio pkg install -e native
 if [ ! -d ./util/venv ]; then
     python3 -m venv ./util/venv
     . ./util/venv/bin/activate

@@ -4,21 +4,43 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout og3x-satellite
+        uses: actions/checkout@v4
+        with:
+          path: og3x-satellite
+
+      - name: Checkout og3
+        uses: actions/checkout@v4
+        with:
+          repository: chl33/og3
+          path: og3
+
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
           key: ${{ runner.os }}-pio
-      - uses: actions/setup-python@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
+      - name: Setup symlinks for testing
+        run: |
+          cd og3x-satellite
+          mkdir -p lib
+          ln -s ../../og3 lib/og3
+          ln -s ../../og3/src src/og3_src
+          ln -s ../../og3/include src/og3_include
+
       - name: Do basic build
+        working-directory: og3x-satellite
         run: ./util/build.sh
 
       - name: Run PlatformIO tests
+        working-directory: og3x-satellite
         run: pio test -e native

@@ -74,16 +74,49 @@ class Device {
 
   const std::string& name() const { return m_name; }
   const char* cname() const { return name().c_str(); }
+  void set_name(const char* name) { m_name = name; }
   const std::string& device_id() const { return m_device_id; }
   const char* cdevice_id() const { return device_id().c_str(); }
   const std::string& manufacturer() const { return m_manufacturer; }
+  uint32_t mfg_id() const { return m_mfg_id; }
+  void set_mfg_id(uint32_t mfg_id);
   const std::string& device_type() const { return m_device_type; }
   const char* cdevice_type() const { return device_type().c_str(); }
+  void set_device_type(const char* device_type) { m_device_type = device_type; }
+
+  const og3_Version& hardware_version() const { return m_hw_version; }
+  void set_hardware_version(const og3_Version& v) { m_hw_version = v; }
+  const og3_Version& software_version() const { return m_sw_version; }
+  void set_software_version(const og3_Version& v) { m_sw_version = v; }
+
+  unsigned packet_count() const { return m_packet_count; }
+  uint32_t last_packet_millis() const { return m_last_packet_millis; }
+  uint32_t comms_timeout_millis() const { return m_comms_timeout_millis; }
+  int rssi() const { return m_rssi.value(); }
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
+  bool is_online() const { return m_is_online; }
 
+  uint32_t id_num() const { return m_device_id_num; }
+
+  void addHAEntry(HADiscovery::Entry& entry, const char* sensor_name);
   void setAllSensorReadingsFailed();
+
+  void setIsOnline(bool is_online);
+
+  bool isTimedOut() const;
+  void set_comms_timeout_millis(uint32_t ms) { m_comms_timeout_millis = ms; }
+
+  /** @brief Persistence: Save all devices in the map to a JSON file. */
+  static bool saveAll(const char* filename, ConfigInterface* config,
+                      const std::map<uint32_t, std::unique_ptr<Device>>& devices);
+
+  /** @brief Persistence: Load devices from a JSON file. */
+  using CreateDeviceFn = std::function<Device*(
+      uint32_t id, const char* name, uint32_t mfg_id, const char* type, uint32_t timeout_ms,
+      const og3_Version& hw_version, const og3_Version& sw_version)>;
+  static bool loadAll(const char* filename, ConfigInterface* config, CreateDeviceFn create_fn);
 
   FloatSensor* float_sensor(unsigned id) {
     auto iter = m_id_to_float_sensor.find(id);
@@ -123,19 +156,27 @@ class Device {
 
  private:
   const uint32_t m_device_id_num;
-  const std::string m_name;
+  std::string m_name;
   const std::string m_device_id;
-  const std::string m_manufacturer;
-  const std::string m_device_type;
+  uint32_t m_mfg_id;
+  std::string m_manufacturer;
+  std::string m_device_type;
+  og3_Version m_hw_version;
+  og3_Version m_sw_version;
   uint16_t m_seq_id;
   HADiscovery* m_discovery;
   VariableGroup m_vg;
   Variable<unsigned> m_dropped_packets;
   Variable<int> m_rssi;
+  unsigned m_packet_count = 0;
   std::map<unsigned, std::unique_ptr<FloatSensor>> m_id_to_float_sensor;
   std::map<unsigned, std::unique_ptr<IntSensor>> m_id_to_int_sensor;
   std::string m_str_disabled;
   BoolVariable m_disabled;
+  uint32_t m_last_packet_millis = 0;
+  bool m_is_online = false;
+  // TODO(chl33): How can this be configured??
+  uint32_t m_comms_timeout_millis = 15 * 60 * 1000;  // 15 minutes.
 };
 
 }  // namespace og3::base_station

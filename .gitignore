@@ -7,3 +7,6 @@ uti/venv
 /include/og3/satellite.pb.h
 /src/satellite.pb.c
 /util/venv/
+/lib/og3
+/src/og3_src
+/src/og3_include
