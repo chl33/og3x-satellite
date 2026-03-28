@@ -120,6 +120,11 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
   setIsOnline(true);
 }
 
+void Device::set_mfg_id(uint32_t mfg_id) {
+  m_mfg_id = mfg_id;
+  m_manufacturer = _manufacturer(mfg_id);
+}
+
 bool Device::saveAll(const char* filename, ConfigInterface* config,
                      const std::map<uint32_t, std::unique_ptr<Device>>& devices) {
   if (!config) {

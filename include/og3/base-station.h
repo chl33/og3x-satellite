@@ -74,10 +74,12 @@ class Device {
 
   const std::string& name() const { return m_name; }
   const char* cname() const { return name().c_str(); }
+  void set_name(const char* name) { m_name = name; }
   const std::string& device_id() const { return m_device_id; }
   const char* cdevice_id() const { return device_id().c_str(); }
   const std::string& manufacturer() const { return m_manufacturer; }
   uint32_t mfg_id() const { return m_mfg_id; }
+  void set_mfg_id(uint32_t mfg_id);
   const std::string& device_type() const { return m_device_type; }
   const char* cdevice_type() const { return device_type().c_str(); }
   void set_device_type(const char* device_type) { m_device_type = device_type; }
@@ -147,10 +149,10 @@ class Device {
 
  private:
   const uint32_t m_device_id_num;
-  const std::string m_name;
+  std::string m_name;
   const std::string m_device_id;
-  const uint32_t m_mfg_id;
-  const std::string m_manufacturer;
+  uint32_t m_mfg_id;
+  std::string m_manufacturer;
   std::string m_device_type;
   uint16_t m_seq_id;
   HADiscovery* m_discovery;
