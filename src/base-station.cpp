@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for details.
 
 #include <og3/base-station.h>
+#include <og3/config_interface.h>
 
 namespace og3::base_station {
 namespace {
@@ -97,6 +98,7 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
     : m_device_id_num(device_id_num),
       m_name(name),
       m_device_id(_device_id(name, device_id_num)),
+      m_mfg_id(mfg_id),
       m_manufacturer(_manufacturer(mfg_id)),
       m_device_type(device_type),
       m_seq_id(seq_id),
@@ -116,6 +118,47 @@ Device::Device(uint32_t device_id_num, const char* name, uint32_t mfg_id, const 
   make_ha_entry(m_dropped_packets, ha::device_type::kSensor, nullptr);
   make_ha_entry(m_rssi, ha::device_type::kSensor, ha::device_class::sensor::kSignalStrength);
   setIsOnline(true);
+}
+
+bool Device::saveAll(const char* filename, ConfigInterface* config,
+                     const std::map<uint32_t, std::unique_ptr<Device>>& devices) {
+  if (!config) {
+    return false;
+  }
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for (auto& iter : devices) {
+    const auto& device = iter.second;
+    JsonObject obj = arr.add<JsonObject>();
+    obj["id"] = device->id_num();
+    obj["name"] = device->name();
+    obj["mfg"] = device->mfg_id();
+    obj["type"] = device->device_type();
+    obj["timeout"] = device->comms_timeout_millis();
+  }
+  String content;
+  serializeJson(doc, content);
+  return config->write_file(filename, content.c_str());
+}
+
+bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDeviceFn create_fn) {
+  if (!config) {
+    return false;
+  }
+  String content;
+  if (!config->read_file(filename, &content)) {
+    return false;
+  }
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, content);
+  if (error) {
+    return false;
+  }
+  JsonArray arr = doc.as<JsonArray>();
+  for (JsonObject obj : arr) {
+    create_fn(obj["id"], obj["name"], obj["mfg"], obj["type"], obj["timeout"]);
+  }
+  return true;
 }
 
 void Device::got_packet(uint16_t seq_id, int rssi) {
