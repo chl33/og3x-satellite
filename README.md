@@ -8,5 +8,3 @@ This library is used by these projects:
 
 Please see the [Introducing Garden133](https://selectiveappeal.org/posts/garden133/) blog post.
 for a project overview.
-
-This library is still a work in progress.
