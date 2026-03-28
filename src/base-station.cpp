@@ -135,6 +135,7 @@ void Device::got_packet(uint16_t seq_id, int rssi) {
   m_seq_id = seq_id;
   m_rssi = rssi;
   m_last_packet_millis = millis();
+  m_packet_count += 1;
 }
 
 void Device::addHAEntry(HADiscovery::Entry& entry, const char* sensor_name) {

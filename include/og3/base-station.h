@@ -80,6 +80,9 @@ class Device {
   const std::string& device_type() const { return m_device_type; }
   const char* cdevice_type() const { return device_type().c_str(); }
   void set_device_type(const char* device_type) { m_device_type = device_type; }
+  unsigned packet_count() const { return m_packet_count; }
+  uint32_t last_packet_millis() const { return m_last_packet_millis; }
+  int rssi() const { return m_rssi.value(); }
   const unsigned dropped_packets() const { return m_dropped_packets.value(); }
   bool is_disabled() const { return m_disabled.value(); }
   void set_disabled(bool disabled) { m_disabled = disabled; }
@@ -140,6 +143,7 @@ class Device {
   VariableGroup m_vg;
   Variable<unsigned> m_dropped_packets;
   Variable<int> m_rssi;
+  unsigned m_packet_count = 0;
   std::map<unsigned, std::unique_ptr<FloatSensor>> m_id_to_float_sensor;
   std::map<unsigned, std::unique_ptr<IntSensor>> m_id_to_int_sensor;
   std::string m_str_disabled;
