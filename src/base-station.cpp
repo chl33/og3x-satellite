@@ -151,7 +151,10 @@ bool Device::saveAll(const char* filename, ConfigInterface* config,
   }
   std::string content;
   serializeJson(doc, content);
-  return config->write_file(filename, content.c_str());
+  bool ok = config->write_file(filename, content.c_str());
+  config->log()->logf("Saved %u satellite devices to %s: %s", (unsigned)devices.size(), filename,
+                      ok ? "OK" : "FAILED");
+  return ok;
 }
 
 bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDeviceFn create_fn) {
@@ -160,11 +163,13 @@ bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDevice
   }
   String content;
   if (!config->read_file(filename, &content)) {
+    config->log()->logf("Failed to read satellite devices from %s (may not exist yet).", filename);
     return false;
   }
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, content.c_str());
   if (error) {
+    config->log()->logf("Failed to parse satellite devices from %s: %s", filename, error.c_str());
     return false;
   }
   JsonArray arr = doc.as<JsonArray>();
@@ -173,9 +178,9 @@ bool Device::loadAll(const char* filename, ConfigInterface* config, CreateDevice
     og3_Version sw = {obj["swMaj"], obj["swMin"], obj["swPat"]};
     create_fn(obj["id"], obj["name"], obj["mfg"], obj["type"], obj["timeout"], hw, sw);
   }
+  config->log()->logf("Loaded %u satellite devices from %s.", (unsigned)arr.size(), filename);
   return true;
 }
-
 void Device::got_packet(uint16_t seq_id, int rssi) {
   if (seq_id > m_seq_id) {
     m_dropped_packets = m_dropped_packets.value() + static_cast<int>(seq_id) - 1 - m_seq_id;
